@@ -1,0 +1,29 @@
+
+ if not self.barcode:
+            number = str(random.randint(10**12, (10**13)-1))
+            print(number)
+            while Product.objects.filter(barcode=number).exists():
+                number = str(random.randint(10**12, (10**13)-1))
+            barcode = EAN13(number, writer=ImageWriter())          
+            print(number)
+            with BytesIO() as buffer:
+                filename_search = f'barcode_{self.name}.png'
+                filename = f'barcode_{self.name}'
+                 
+                destination_path_search = os.path.join(MEDIA_URL, filename_search)
+                destination_path = os.path.join(MEDIA_URL, filename)
+
+                text = number + '\n' + self.name 
+                print(f'destination_path = {destination_path_search}')
+                counter = 0
+                while pathlib.Path(destination_path_search).is_file():                   
+                    counter += 1
+                    filename_search = f'barcode_{self.name}{counter}.png'
+                    filename= f'barcode_{self.name}({counter})'
+                    destination_path_search = os.path.join(MEDIA_URL, filename_search)
+                    destination_path = os.path.join(MEDIA_URL, filename)
+
+                barcode.write(buffer)
+                barcode.save(destination_path, text=text)
+
+            self.barcode = number
