@@ -10,7 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+
 from pathlib import Path
+from django.conf import settings
+from datetime import timedelta
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,6 +34,10 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+# settings.py
+
+CSRF_COOKIE_SECURE = True
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -37,9 +46,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken', 
+    'django_extensions',
+    'user',
+    'product',
+    'receipt',
+    'cashier_shift',
+    'employe',
+    'traders',
+    'receipt_product',
+
 ]
 
 MIDDLEWARE = [
+    
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -47,10 +68,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'sales_system.urls'
 
+ 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -68,6 +91,22 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'sales_system.wsgi.application'
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+
+   
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_EXPIRATION': timedelta(days=1), 
+
+}
+
+
+
+  
 
 
 # Database
@@ -75,12 +114,23 @@ WSGI_APPLICATION = 'sales_system.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'sales_system',
+        'USER': 'postgres',
+        'PASSWORD': '1',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
+    ,
+    'test': {
+      'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'sales_system',
+        'USER': 'postgres',
+        'PASSWORD': '1',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    },
 }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -121,3 +171,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'user.CustomUser'
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',  
+    
+)
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/Barcode')
+MEDIA_URL = 'media/Barcode/'
