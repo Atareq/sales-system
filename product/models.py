@@ -21,7 +21,7 @@ class Product(models.Model):
     carton_price = models.DecimalField(max_digits=10, decimal_places=2)
     peice_price = models.DecimalField(max_digits=10, decimal_places=2) 
     #the price of peice after adding the profit
-    piece_profit = models.DecimalField(max_digits=10, decimal_places=2)
+    piece_profit = models.DecimalField(max_digits=10, decimal_places=2,null=True)
     peice_quentity = models.IntegerField()
     barcode = models.CharField(max_length=14, unique=False)
     date_intiated =  models.DateTimeField(auto_now_add=True)

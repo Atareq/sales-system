@@ -37,7 +37,6 @@ class TraderReceiptProduct(models.Model):
     # "barcode"->get"product(pk)"-> minus the quentity ->
     # save the "profit of piece" ->save the (fk)-> signal(after save) ->
     # minas the quentity from the product table
-    new_field = models.CharField(max_length=100,null=True)
 
 
 

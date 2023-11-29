@@ -8,48 +8,61 @@ from pyzbar.pyzbar import decode
 from django.db.models import Q
 
 class ProductAPI(APIView):
-
     def post(self, request):
-        try :
-            barcode = request.FILES.get('barcode')
-            barcode = get_barcode(barcode)
+        try:
+            # Extract barcode from the uploaded file
+            barcode_file = request.FILES.get('barcode')
+            barcode = get_barcode(barcode_file)
             request.data['barcode'] = barcode
             serializer = ProductSerializer(data=request.data)
-   
         except:
             serializer = ProductSerializer(data=request.data)
+
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # Calculate and set piece_profit before saving the product
+            product = serializer.save()
+            product.piece_profit = product.peice_price - (product.carton_price / product.carton_pieces)
+            product.save()
+
+            # Return a successful response with product profit and ID
+            return Response({'product profit': product.piece_profit, 'product id': product.id}, status=status.HTTP_201_CREATED)
+        
+        # Return validation errors if the serializer is not valid
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
-        barcode = request.FILES.get('barcode')
-        if not barcode:
-            return Response({'message': ' you did not provide barcode'}, status=status.HTTP_204_NO_CONTENT)
+        # id = request.data.get('id')
+        # print (id)
+        # product = Product.objects.get(id= id)
+        # return Response({'Product id': product.id, 'Product carton quentity': product.carton_num,'Product peice quentity': product.peice_quentity,'peices in single cartoon':product.carton_pieces}, status=status.HTTP_200_OK)
+
+        barcode_file = request.FILES.get('barcode')
+
+        if not barcode_file:
+            # Return a response if barcode is not provided
+            return Response({'message': 'You did not provide a barcode'}, status=status.HTTP_204_NO_CONTENT)
+
         try:
+            # Decode the barcode and query for the product
+            decoded_text = get_barcode(barcode_file)
+            product = Product.objects.filter(Q(barcode=decoded_text) & Q(peice_quentity__gt=0)).first()
 
-            decoded_text = get_barcode(barcode)
-            # check if this product quentity and if it is 0 we del the object
-            # and search for another product with the same barcode and check that also
-            # and if we couldnot find another product we send that Response  
-            product = Product.objects.filter(barcode=decoded_text).first()
-            while product.peice_quentity == 0:
-                product.objects.delete()
-                try:
-                    product = Product.objects.filter(barcode=decoded_text).first()
-                except:
-                    return Response({'message': 'Out of stock'}, status=status.HTTP_200_OK)
-            return Response({'Product id': product.id, 'Product name': product.name,}, status=status.HTTP_200_OK)
+            # Return product information if found
+            return Response({
+                'Product id': product.id,
+                'Product name': product.name,
+                'Product carton quantity': product.carton_num,
+                'Product piece quantity': product.peice_quentity,
+                'Pieces in single carton': product.carton_pieces
+            }, status=status.HTTP_200_OK)
+
         except:
-            return Response({'message': ' invalid barcode '}, status=status.HTTP_204_NO_CONTENT)
+            # Return a response if barcode is invalid or product is out of stock
+            return Response({'message': 'Invalid barcode or out of stock'}, status=status.HTTP_204_NO_CONTENT)
 
-      
 def get_barcode(barcode):
+    # Open the barcode image and decode
     pil_image = Image.open(barcode)
     decoded_objects = decode(pil_image)
     decoded_text = decoded_objects[0].data.decode('utf-8')
     return decoded_text
-    
-# Uncomment and modify if you have specific functionality to register at exit
-# atexit.register(your_exit_function)
